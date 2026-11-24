@@ -1,0 +1,48 @@
+name: security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: the token can only read the repo. Nothing in this workflow writes.
+permissions:
+  contents: read
+
+jobs:
+  gitleaks:            # GATE: a leaked secret is exposed the moment it's pushed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0              # gitleaks scans full history
+          persist-credentials: false  # don't leave the token in .git/config
+      - name: Secret scan (Gitleaks)
+        run: |
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            zricethezav/gitleaks:v8.30.1 \
+            detect --source /repo --exit-code 1 --verbose --redact
+
+  semgrep:             # GATE: injection is high-severity and the finding is high-confidence
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: SAST (Semgrep)
+        run: |
+          pip install "semgrep==1.186.0"   # pinned version
+          semgrep scan --config auto --error
+
+  trivy:               # REPORT: surfaces findings, never blocks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Dependency scan (Trivy)
+        run: |
+          # Image pinned by digest (immutable). Trivy version: <fill in from Docker Hub>
+          docker run --rm -v "${{ github.workspace }}:/repo" \
+            aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
+            fs --scanners vuln --exit-code 0 /repo
