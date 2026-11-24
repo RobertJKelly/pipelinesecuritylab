@@ -43,7 +43,7 @@ jobs:
           persist-credentials: false
       - name: Dependency scan (Trivy)
         run: |
-          # Image pinned by digest (immutable). Trivy version: <fill in from Docker Hub>
+          # Image pinned by digest (immutable). Trivy version: 0.76.2
           docker run --rm -v "${{ github.workspace }}:/repo" \
             aquasec/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
             fs --scanners vuln --exit-code 0 /repo
