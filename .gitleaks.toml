@@ -1,0 +1,9 @@
+# Lab rule: the default aws-access-token rule allowlists keys ending in EXAMPLE.
+[extend]
+useDefault = true
+
+[[rules]]
+id = "lab-aws-access-key"
+description = "AWS access key ID (lab rule, no EXAMPLE allowlist)"
+regex = '''AKIA[A-Z0-9]{16}'''
+keywords = ["akia"]
