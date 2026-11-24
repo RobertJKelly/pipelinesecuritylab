@@ -18,10 +18,11 @@ jobs:
           fetch-depth: 0              # gitleaks scans full history
           persist-credentials: false  # don't leave the token in .git/config
       - name: Secret scan (Gitleaks)
-        run: |
+          run: |
           docker run --rm -v "${{ github.workspace }}:/repo" \
             zricethezav/gitleaks:v8.30.1 \
-            detect --source /repo --exit-code 1 --verbose --redact
+            detect --source /repo --config /repo/.gitleaks.toml \
+            --exit-code 1 --verbose --redact
 
   semgrep:             # GATE: injection is high-severity and the finding is high-confidence
     runs-on: ubuntu-latest
